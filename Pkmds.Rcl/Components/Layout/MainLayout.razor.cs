@@ -1,4 +1,5 @@
 using Pkmds.Rcl.Extensions;
+using Pkmds.Rcl.Services;
 
 namespace Pkmds.Rcl.Components.Layout;
 
@@ -12,6 +13,10 @@ public partial class MainLayout : IDisposable
     private IBrowserFile? browserLoadSaveFile;
     private bool isDarkMode;
     private MudThemeProvider? mudThemeProvider;
+
+    // Inject backup service
+    [Inject]
+    public IBackupService BackupService { get; set; } = null!;
 
     public void Dispose() => RefreshService.OnAppStateChanged -= StateHasChanged;
 
@@ -329,6 +334,34 @@ public partial class MainLayout : IDisposable
 
         // Programmatically click the download link
         await element.InvokeVoidAsync("click");
+    }
+
+    // New: create a backup for the selected Pokémon via BackupService
+    private async Task BackupSelectedPokemon()
+    {
+        if (AppService.EditFormPokemon is null)
+        {
+            return;
+        }
+
+        var pkm = AppService.EditFormPokemon;
+
+        AppState.ShowProgressIndicator = true;
+        try
+        {
+            var entry = await BackupService.SavePokemonBackupAsync(pkm);
+            // Show a friendly confirmation
+            await DialogService.ShowMessageBox("Backup Saved",
+                $"Pokémon backed up as '{entry.FileName}' (id: {entry.Id}).");
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowMessageBox("Error", $"{ex.Message}{Environment.NewLine}{ex.StackTrace}");
+        }
+        finally
+        {
+            AppState.ShowProgressIndicator = false;
+        }
     }
 }
 

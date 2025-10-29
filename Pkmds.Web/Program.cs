@@ -1,3 +1,5 @@
+using Pkmds.Rcl.Services;
+
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 var services = builder.Services;
 
@@ -19,7 +21,9 @@ services
     .AddSingleton<IAppService, AppService>()
     .AddSingleton<JsService>()
     .AddSingleton<BlazorAesProvider>()
-    .AddSingleton<BlazorMd5Provider>();
+    .AddSingleton<BlazorMd5Provider>()
+    // Register the backup service used by MainLayout:
+    .AddScoped<IBackupService, BackupService>();
 
 var app = builder.Build();
 
